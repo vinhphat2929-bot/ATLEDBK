@@ -1,0 +1,65 @@
+# HUONG DAN UPDATE APP
+
+## Kien truc moi - ZIP Update
+
+### Cac thanh phan tren Drive can co:
+1. `version.json` - chua version moi
+2. `update.zip` - chua ATLED_BK.exe ben trong
+
+---
+
+## Moi lan can update:
+
+### 1. Tang version
+- Tao/chinh sua file `version.json` trong folder Drive
+- Noi dung: `{"version": "1.0.17"}` (version moi)
+- **Luu y:** Phai lon hon version trong code (hien tai la 1.0.16)
+
+### 2. Tao update.zip
+- Build app moi ra ATLED_BK.exe
+- Tao file ZIP, ben trong chua duy nhat file `ATLED_BK.exe`
+- Upload `update.zip` len Drive
+
+### 3. That la!
+
+App se tu dong:
+- Doc version.json tu Drive
+- So sanh version (drive > current?)
+- Tai update.zip ve thu muc temp
+- Kiem tra tinh toan ven ZIP (bao ve khoi HTML warning page cua Drive)
+- Neu hop le: giai nen de file ATLED_BK.exe va khoi dong lai
+- Neu khong hop le: huy update, giu app cu chay nen
+
+---
+
+## File ID hien tai:
+## File ID hiện tại:
+| File | File ID |
+|------|---------|
+| version.json | 1b13R39_EwqUAYJz6tv4iEWq4r2grqxyU |
+| update.zip | 1WXiuHk6zODSsT__SW4XwtNYLjC9GND5d |
+
+---
+
+## Cach lay File ID:
+URL cua file tren Drive:
+```
+https://drive.google.com/file/d/[FILE_ID_HERE]/view
+```
+Doan giua `/d/` va `/view` chinh la File ID.
+
+---
+
+## Cu phap version.json:
+```json
+{"version": "1.0.17"}
+```
+
+---
+
+## Cau truc update.zip:
+```
+update.zip
+└── ATLED_BK.exe
+```
+(Dung nap ATLED_BK.exe vao thu muc con nao, chi can ATLED_BK.exe nam trong ZIP)
