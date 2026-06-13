@@ -109,7 +109,7 @@ def is_registry_startup_enabled() -> bool:
 def register_registry_startup() -> bool:
     """Register app to Windows Registry for auto-start with --background flag.
 
-    Nếu exe không nằm ở C:\ATLED\ATLED_BK.exe thì tự động copy chính nó
+    Nếu exe không nằm ở C:\\ATLED\\ATLED_BK.exe thì tự động copy chính nó
     về đó trước, rồi mới ghi Registry. Tránh trường hợp exe chạy từ
     Downloads/Desktop bị Windows chặn ở startup.
     """
@@ -278,3 +278,39 @@ def ensure_auto_start_shortcut(store_name: str, watch_directory: str):
             configure_auto_start(True)
         except Exception as e:
             logging.warning(f"Auto-start shortcut refresh failed: {e}")
+
+
+def cleanup_old_exe_after_update():
+    """
+    App mới sẽ xóa ATLED_BK_OLD.exe sau 60 giây.
+    Retry nhiều lần vì app cũ có thể vẫn đang cleanup.
+    """
+    import time
+    import threading
+
+    old_exe = os.path.join(r"C:\ATLED", "ATLED_BK_OLD.exe")
+
+    def _cleanup():
+        # Đợi 60s cho app cũ exit hoàn toàn
+        logging.info("[CLEANUP] Cho 60s truoc khi xoa _OLD...")
+        time.sleep(60)
+
+        # Retry nhiều lần với backoff
+        for attempt in range(5):
+            if not os.path.exists(old_exe):
+                logging.info("[CLEANUP] _OLD da bi xoa boi qua trinh khac")
+                return
+
+            try:
+                os.remove(old_exe)
+                logging.info(f"[CLEANUP] Da xoa ATLED_BK_OLD.exe (attempt {attempt + 1})")
+                return
+            except Exception as e:
+                logging.warning(f"[CLEANUP] Attempt {attempt + 1} failed: {e}")
+                if attempt < 4:
+                    time.sleep(5)  # Retry sau 5s
+
+        logging.warning(f"[CLEANUP] Khong the xoa _OLD sau 5 attempts: {old_exe}")
+
+    t = threading.Thread(target=_cleanup, daemon=True)
+    t.start()

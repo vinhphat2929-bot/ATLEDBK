@@ -299,25 +299,66 @@ Nếu chạy bằng `python main.py`, app vẫn dùng được nhưng sẽ khôn
 
 App hỗ trợ kiểm tra update tự động cho bản `.exe`.
 
-Điều kiện để tính năng hoạt động:
+### Điều kiện hoạt động
 
-- `AUTO_UPDATE_ENABLED = true`
-- app đang chạy bằng file `.exe`
-- trong ngày hiện tại chưa check update trước đó
-- file update mới phải được upload lên Google Drive:
-  - **File text** (chứa version, ví dụ: `v1.0.9`) → lấy **File ID** điền vào `UPDATE_VERSION_FILE_ID`
-  - **File exe** (đặt version trong tên, ví dụ: `ATLED_BK_v1.0.9.exe`) → lấy **File ID** điền vào `UPDATE_EXE_FILE_ID`
+- `AUTO_UPDATE_ENABLED = true` trong config.json
+- App đang chạy bằng file `.exe` (không hoạt động khi chạy bằng `python main.py`)
+- Trong ngày hiện tại chưa check update trước đó
 
-Cơ chế auto-update đầu ngày:
+### Luồng hoạt động
 
-- sau khi app khởi động, thread update chờ khoảng `20` giây rồi mới check
-- mỗi ngày chỉ check `1` lần bằng `LAST_UPDATE_CHECK_DATE`
-- app đọc version từ file text trên Drive (`UPDATE_VERSION_FILE_ID`)
-- app so sánh version bằng semantic versioning (`drive_version > current_version`)
-- nếu có bản mới → tải exe từ Drive (`UPDATE_EXE_FILE_ID`) → thay thế và restart
-- sau khi check xong, app ghi ngày hiện tại vào `config.json` qua `LAST_UPDATE_CHECK_DATE`
+```
+App khởi động
+    ↓
+AutoUpdateCheckThread chờ 20 giây (AUTO_UPDATE_INITIAL_DELAY_SECONDS)
+    ↓
+Kiểm tra LAST_UPDATE_CHECK_DATE trong config.json
+    ↓
+┌─────────────────────────────────────────┐
+│ Nếu đã check hôm nay → Skip, không làm gì│
+│ Nếu chưa check → Check version trên Dropbox│
+└─────────────────────────────────────────┘
+    ↓
+Có update → Download update.zip → Thực hiện update
+Không có update → Lưu LAST_UPDATE_CHECK_DATE = hôm nay
+```
 
-Ngoài kiểm tra tự động, menu khay hệ thống còn có nút `Update` để người dùng chủ động chạy cập nhật.
+### Giới hạn quan trọng: 1 lần check mỗi ngày
+
+**Auto-update chỉ check ĐÚNG 1 LẦN trong ngày**, bất kể:
+
+- Máy reset bao nhiêu lần (miễn là đã check lần đầu thành công)
+- Có bao nhiêu app instance chạy
+
+**Ngày mai (00:00)** mới check lại.
+
+**Hệ quả:** Nếu bạn check lúc 8h sáng (không có update), rồi 10h có version mới trên server → app sẽ **KHÔNG update** cho đến ngày mai.
+
+### Khi nào sẽ check lại trong cùng ngày?
+
+1. **Reset trước khi kịp lưu config** - Nếu máy reset ngay sau khi app check nhưng chưa kịp ghi `LAST_UPDATE_CHECK_DATE` xuống config.json → app sẽ check lại
+
+2. **Xóa `LAST_UPDATE_CHECK_DATE`** trong config.json thủ công
+
+3. **Manual Update** - Người dùng bấm `Update` trong menu tray để check thủ công (không bị giới hạn ngày)
+
+### Cách force check update thủ công
+
+1. Mở `C:\ATLED\config.json`
+2. Xóa hoặc đổi giá trị `LAST_UPDATE_CHECK_DATE` (VD: đổi thành `2026-06-10`)
+3. Restart app
+
+### Tham số nội bộ sau update
+
+Khi app update xong và restart, nó chạy với tham số `--auto-updated` để skip check update lần đầu:
+
+```bash
+ATLED_BK.exe --auto-updated
+```
+
+### Manual update (menu tray)
+
+Ngoài auto-update, menu khay hệ thống có nút `Update` để người dùng chủ động check và cài update bất kỳ lúc nào (không bị giới hạn 1 lần/ngày).
 
 ### Manual update không cần bấm Active lại
 

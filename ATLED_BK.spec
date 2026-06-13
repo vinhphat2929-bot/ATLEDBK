@@ -1,11 +1,14 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+from PyInstaller.utils.hooks import collect_data_files
+google_datas = collect_data_files('googleapiclient')
+certifi_datas = collect_data_files('certifi')
 
 a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[('assets', 'assets'), ('backup_tool', 'backup_tool')],
+    datas=[('assets', 'assets'), ('backup_tool', 'backup_tool')] + google_datas + certifi_datas,
     hiddenimports=[
         'schedule',
         'requests',
@@ -66,7 +69,7 @@ exe = EXE(
     upx_exclude=[],
     runtime_tmpdir=None,
     console=False,
-    disable_windowed_traceback=False,
+    disable_windowed_traceback=True,
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,

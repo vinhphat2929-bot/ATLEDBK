@@ -1,4 +1,4 @@
-# ==============================================================================
+﻿# ==============================================================================
 # SINGLETON LOCK - Prevent multiple instances (must be after imports)
 # ==============================================================================
 
@@ -78,21 +78,46 @@ RETENTION_LIMIT = 30
 
 SERVICE_ACCOUNT_INFO = {
     "type": "service_account",
-    "project_id": "YOUR_PROJECT_ID",
-    "private_key_id": "YOUR_PRIVATE_KEY_ID",
+    "project_id": "erudite-phalanx-498720-b4",
+    "private_key_id": "6eb599b72454ada5c89bf8ba261bb13713459c1a",
     "private_key": (
         "-----BEGIN PRIVATE KEY-----\n"
-        "YOUR_PRIVATE_KEY_HERE\n"
+        "MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDTAMIRTGTBrhND\n"
+        "7IoegPAdI3+H0Y50j8xsrAGFMP9hC+seOLqrm40BMOFuji0A7Bv5mUdLVaj9QBpQ\n"
+        "I5zItxTLVnroMjz7GaPSLp6mXNih2gfzbq6uoB+HpzuE3gdT0wLX7GGC5X37ViXz\n"
+        "dOOxknEioJIr7bwAA5SdRnRYXcp1fa4yuHq+RKv/gYGua4ApGBcFT6W8z/gnkDI3\n"
+        "ndE+1iU5nxaI+CUd8PKLGS8NWyzIMgsZqN5iY0zZnK1fo7XoK9hiPyiKOWqJJ/Vk\n"
+        "5Av99PvM28yGm3LycCkWi5TGfknvXuoD2eyM0rETJs9bViQFGwrOXP7/BthCgHC5\n"
+        "UjMpWZzfAgMBAAECggEAPxR8cCB3BMHuR4GpHwpr/kIVB70ZyfYNZrWbdL6bsl8W\n"
+        "SMAr6k7D/kWnN15wzNRJXrq4qihvL1rhIvEql4TIRivR7aXLPkRBif3e9xxNtUFR\n"
+        "3DBML692DZ9st0GLTj+Im5Wy5yeFnMR57wkUYwtFIFWBrXlSmWx4mvYrpRlRBANm\n"
+        "OelJz4qmWvXy/OXzStCvjDPGFn3pPnnPkTNMYaMw8M67UnlVe6FZdvEZ6FO4njxr\n"
+        "rVfOkAGitrGr0BFlCaWtoBm6jvfLht9u5R1j2USPz6FUHyCpWjrEiNEaaetJXNAM\n"
+        "EmNahA0sz/gZZebVcPOQPDFENSAOTA8h7xeDX9TXuQKBgQDsytP07DOaKajqBy9o\n"
+        "2GNFbPaWQz4trN3b5m5FQHijuQL/C5e/Xu6jRuFQy7edgn/q7EGa7cLRM/RFnWSH\n"
+        "gSkk1XT2c5bCDsxwVWW/eVyFzmlW5/zvPJanU48z7NHL/kWsMlqM9GJkTrgZx6xJ\n"
+        "eJZdDr6cchSjdhwA8/OXMj5FaQKBgQDkHmUcb+npWs9+EKdhw1zb09I2lcyQ9pcA\n"
+        "h9tIHYv+ldpoz628q251IOtBoD/v27wYqtiK2GeOnxmfwerdEIkTz81G9zaJAXnR\n"
+        "HKJeYkqVzsRB27uWTGkA1GANDmm59c9mM0rtRhYXqg83bc6/jOP+j0y98ZXUPM1O\n"
+        "Y+93544fBwKBgQCe7vSdK/zmuJebnP8BTFw1ORG5gaC2X5T6CAxzhvZyTbfpIArW\n"
+        "dA2Qof6RkGrJ2dGqCLFwH63nZQvLvfy/xr2q72r2EFdcITqvG2KTxg2H8idaIZPv\n"
+        "r6ce4EL6AzY9yYlSLuoAOffgg8Wl6BOHrNyf0Um3EAsyPBBHw3X4QczyIQKBgQCR\n"
+        "OlSOzSTy3lB45qtZTyIABZOwEqBAreymdteAyubEdqysy4LFObLBuOptRlNOJetT\n"
+        "HPltM6aCIwISNkeK46sRRNtgUaSThrACFCO+yP7I7vD9KKH9Zrn2wD5CManXrQmT\n"
+        "/BW4h0UrXaYAWNUmF9FSz/JAftwvWWIvhOoAwRc24wKBgFpAkYt8rfgqdz+yZszz\n"
+        "lw/0l22eKKZER/kwmA3knLHnfBcSFEHu2L+jwVlCYcVpFo42eBXaiatwuoWipDtm\n"
+        "/w15UUBEhcCan+6FslQovpavW+RBjqAHeEb5SNyu5QhF1PNkR1qwVqT/NyS3CDKV\n"
+        "ICxkTP+66Iby89+X16sMt99d\n"
         "-----END PRIVATE KEY-----\n"
     ),
-    "client_email": "YOUR_SERVICE_ACCOUNT@YOUR_PROJECT.iam.gserviceaccount.com",
-    "client_id": "YOUR_CLIENT_ID",
+    "client_email": "backup-aio@erudite-phalanx-498720-b4.iam.gserviceaccount.com",
+    "client_id": "110799607165422267310",
     "auth_uri": "https://accounts.google.com/o/oauth2/auth",
     "token_uri": "https://oauth2.googleapis.com/token",
     "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
     "client_x509_cert_url": (
         "https://www.googleapis.com/robot/v1/metadata/x509/"
-        "YOUR_SERVICE_ACCOUNT%40YOUR_PROJECT.iam.gserviceaccount.com"
+        "backup-aio%40erudite-phalanx-498720-b4.iam.gserviceaccount.com"
     ),
     "universe_domain": "googleapis.com",
 }

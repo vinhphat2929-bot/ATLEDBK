@@ -162,19 +162,27 @@ def _daily_report_worker():
     """Worker thread that sends daily report at scheduled time."""
     import schedule
     import atexit as _atexit
-    
+    import socket
+
     print("[DAILY_REPORT] Daily report worker thread started")
     logging.info("[DAILY_REPORT] Daily report worker thread started")
-    
+
     # Import config at runtime
     from . import app_config
     cfg = app_config._read_json_config(app_config.CONFIG_PATH)
-    
+
     report_token = cfg.get("TELEGRAM_REPORT_TOKEN", "") or ""
     report_chat_id = cfg.get("TELEGRAM_REPORT_CHAT_ID", "") or ""
-    
-    print(f"[DAILY_REPORT] Config: token={'OK' if report_token else 'EMPTY'}, chat_id={report_chat_id}")
-    
+
+    # Check if this machine is the designated report host
+    current_hostname = socket.gethostname()
+    is_report_host = current_hostname == app_config.DAILY_REPORT_HOSTNAME
+
+    if is_report_host:
+        print(f"[DAILY_REPORT] This machine '{current_hostname}' is the designated report host")
+    else:
+        print(f"[DAILY_REPORT] Machine '{current_hostname}' is NOT the report host - skipping")
+
     while _daily_report_running:
         try:
             # Run daily report check every minute
@@ -182,6 +190,11 @@ def _daily_report_worker():
             
             # Check if it's time for daily report (default: 02:00)
             if now.hour == app_config.DAILY_REPORT_HOUR and now.minute == app_config.DAILY_REPORT_MINUTE:
+                if not is_report_host:
+                    # Not the report host - skip sending
+                    time.sleep(60)
+                    continue
+
                 print("[DAILY_REPORT] Time for daily report!")
                 logging.info("[DAILY_REPORT] Triggering daily report")
                 

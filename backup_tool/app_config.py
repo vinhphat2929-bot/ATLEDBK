@@ -40,7 +40,14 @@ def get_app_base() -> str:
 
 
 def resolve_asset(filename: str) -> str:
-    return os.path.join(get_resource_base(), "assets", filename)
+    """Resolve asset path - uses fixed C:\ATLED\assets\ if available, otherwise falls back to bundled."""
+    fixed_path = os.path.join(ATLED_DIR, "assets", filename)
+    if os.path.exists(fixed_path):
+        return fixed_path
+    bundled_path = os.path.join(get_resource_base(), "assets", filename)
+    if os.path.exists(bundled_path):
+        return bundled_path
+    return fixed_path
 
 
 def resolve_exe_path() -> str:
@@ -56,7 +63,7 @@ ATLED_EXE_PATH = os.path.join(ATLED_DIR, ATLED_EXE_NAME)
 
 # Alias for backward compatibility with existing code
 APP_DIR = ATLED_DIR
-APP_VERSION = "1.2.6"
+APP_VERSION = "1.0.9"
 CONFIG_PATH = os.path.join(APP_DIR, "config.json")
 CREDENTIALS_PATH = os.path.join(APP_DIR, "credentials.json")
 LOG_DIR = os.path.join(APP_DIR, "logs")
@@ -66,9 +73,9 @@ UPDATE_ZIP_FILE_ID = "YOUR_ZIP_FILE_ID"
 EXE_DIRECT_DOWNLOAD_ID = "YOUR_EXE_FILE_ID"
 
 # Direct download URLs (Dropbox)
-URL_DOWNLOAD_ZIP = "https://www.dropbox.com/scl/fi/yato6wqngpgqqahtlygse/update.zip?rlkey=dg4xie639qemoun0xorq40a4u&st=9xyz0z8s&dl=1"
-URL_VERSION_CHECK = "https://www.dropbox.com/scl/fi/tpp2kdrxg0it6uiv8m3wv/version.json?rlkey=t8z7vusamwpfowc40vrfnvnz8&st=jmypsce1&dl=1"
-URL_DOWNLOAD_EXE = "https://www.dropbox.com/scl/fi/bt4fmb66t1sfgmdihgqqs/ATLED_BK.exe?rlkey=5udjbeaqsxr1wpp70d8ew36ln&st=emguxczu&dl=1"
+URL_DOWNLOAD_ZIP = "https://www.dropbox.com/scl/fi/yato6wqngpgqqahtlygse/update.zip?rlkey=dg4xie639qemoun0xorq40a4u&st=mjopafhf&dl=1"
+URL_VERSION_CHECK = "https://www.dropbox.com/scl/fi/tpp2kdrxg0it6uiv8m3wv/version.json?rlkey=t8z7vusamwpfowc40vrfnvnz8&st=s79h33vs&dl=1"
+URL_DOWNLOAD_EXE = "https://www.dropbox.com/scl/fi/bt4fmb66t1sfgmdihgqqs/ATLED_BK.exe?rlkey=5udjbeaqsxr1wpp70d8ew36ln&st=6c3mdvtz&dl=1"
 UPDATE_TEMP_NAME = "update.zip"  # Ten file ZIP tam thoi
 UPDATE_EXE_EXTRACTED_NAME = "ATLED_BK.exe"  # Ten file exe ben trong ZIP
 UPDATE_EXE_TEMP_NAME = "ATLED_BK_NEW.exe"  # Ten file exe tam (tranh Permission Denied khi extract)
@@ -90,7 +97,7 @@ DEFAULT_CONFIG = {
     "TELEGRAM_UPDATE_TOKEN": "8655662127:AAE3eXBlKJeG25PoWJWtRz50ZD6JCoQgDnU",
     "TELEGRAM_UPDATE_CHAT_ID": "-5270541132",
     "AUTO_START_ENABLED": False,
-    "AUTO_UPDATE_ENABLED": True,
+    "AUTO_UPDATE_ENABLED": False,  # Disabled - manual update only
     "LAST_UPDATE_CHECK_DATE": "",
 }
 
@@ -112,12 +119,14 @@ REGISTRY_RUN_PATH = r"Software\Microsoft\Windows\CurrentVersion\Run"
 MAX_NETWORK_RETRIES = 3
 NETWORK_RETRY_DELAY_SECONDS = 15
 FILE_SETTLE_DELAY_SECONDS = 3
-TELEGRAM_POLL_API_TIMEOUT_SECONDS = 30
+TELEGRAM_POLL_API_TIMEOUT_SECONDS = 5  # Keep short for fast interrupt during update
 TELEGRAM_HTTP_TIMEOUT_SECONDS = 15
 TELEGRAM_MESSAGE_LIMIT = 4096
 TELEGRAM_SAFE_MESSAGE_LIMIT = 3800
-DAILY_REPORT_HOUR = 4
-DAILY_REPORT_MINUTE = 59
+DAILY_REPORT_HOUR = 23
+DAILY_REPORT_MINUTE = 55
+# Chỉ máy nào có hostname này mới gửi daily report (tránh trùng lặp khi cài nhiều máy)
+DAILY_REPORT_HOSTNAME = "DESKTOP-JVHR1D2"
 STALE_BACKUP_DAYS = 3
 COMMAND_LOCK_FOLDER_NAME = "_ATLED_TELEGRAM_COMMAND_LOCKS"
 COMMAND_LOCK_RETENTION_DAYS = 7

@@ -1,9 +1,9 @@
-# HUONG DAN UPDATE APP
+# HUONG DAN UPDATE APP - ATLED BK
 
-## Kien truc moi - ZIP Update
+## Kien truc - Dropbox URLs
 
-### Cac thanh phan tren Drive can co:
-1. `version.json` - chua version moi
+### Cac thanh phan tren Dropbox can co:
+1. `version.json` - chua version moi (dang tren Dropbox)
 2. `update.zip` - chua ATLED_BK.exe ben trong
 
 ---
@@ -11,48 +11,47 @@
 ## Moi lan can update:
 
 ### 1. Tang version
-- Tao/chinh sua file `version.json` trong folder Drive
-- Noi dung: `{"version": "1.0.17"}` (version moi)
-- **Luu y:** Phai lon hon version trong code (hien tai la 1.0.16)
+- Tao/chinh sua file `version.json` tren Dropbox
+- Noi dung: `{"version": "1.3.1"}` (version moi)
+- **Luu y:** Phai lon hon version trong code (hien tai la 1.3.1)
 
 ### 2. Tao update.zip
 - Build app moi ra ATLED_BK.exe
 - Tao file ZIP, ben trong chua duy nhat file `ATLED_BK.exe`
-- Upload `update.zip` len Drive
+- Upload `update.zip` len Dropbox
 
-### 3. That la!
+### 3. Cap nhat URLs trong app_config.py (neu can)
+- `URL_DOWNLOAD_ZIP` - direct link den update.zip tren Dropbox
+- `URL_VERSION_CHECK` - direct link den version.json tren Dropbox
+
+### 4. That la!
 
 App se tu dong:
-- Doc version.json tu Drive
+- Doc version.json tu Dropbox
 - So sanh version (drive > current?)
 - Tai update.zip ve thu muc temp
-- Kiem tra tinh toan ven ZIP (bao ve khoi HTML warning page cua Drive)
+- Kiem tra tinh toan ven ZIP (bao ve khoi HTML warning page cua Dropbox)
 - Neu hop le: giai nen de file ATLED_BK.exe va khoi dong lai
 - Neu khong hop le: huy update, giu app cu chay nen
 
 ---
 
-## File ID hien tai:
-## File ID hiện tại:
-| File | File ID |
-|------|---------|
-| version.json | 1b13R39_EwqUAYJz6tv4iEWq4r2grqxyU |
-| update.zip | 1WXiuHk6zODSsT__SW4XwtNYLjC9GND5d |
+## Dropbox URL Format
 
----
+### De lay direct link (dl=1):
+1. Click "Copy link" tren Dropbox
+2. Link se co dang: `https://www.dropbox.com/s/xxx/filename?rlkey=yyy&st=zzz`
+3. Thay `?rlkey=...` thanh `?dl=1` de lay direct download link
 
-## Cach lay File ID:
-URL cua file tren Drive:
-```
-https://drive.google.com/file/d/[FILE_ID_HERE]/view
-```
-Doan giua `/d/` va `/view` chinh la File ID.
+### Vi du:
+- Source: `https://www.dropbox.com/s/abc123/update.zip?rlkey=xyz&st=def`
+- Direct: `https://www.dropbox.com/s/abc123/update.zip?dl=1`
 
 ---
 
 ## Cu phap version.json:
 ```json
-{"version": "1.0.17"}
+{"version": "1.3.1"}
 ```
 
 ---
@@ -63,3 +62,43 @@ update.zip
 └── ATLED_BK.exe
 ```
 (Dung nap ATLED_BK.exe vao thu muc con nao, chi can ATLED_BK.exe nam trong ZIP)
+
+---
+
+## Luong Update chi tiet
+
+### Auto Update (ngay 1 lan):
+1. App khoi dong -> cho 20 giay
+2. Kiem tra AUTO_UPDATE_ENABLED va LAST_UPDATE_CHECK_DATE
+3. Goi download_version_config() tu Dropbox
+4. So sanh version voi APP_VERSION
+5. Neu co update -> tai update.zip vao temp
+6. Validate ZIP (kiem tra ATLED_BK.exe ben trong)
+7. Chay run_update_script() -> restart app an
+
+### Manual Update (tu tray menu):
+1. User bam "Update" trong tray menu
+2. Kiem tra version truc tiep (khong co delay, khong kiem tra ngay)
+3. Neu co update -> tai ZIP -> apply ngay (khong hoi xac nhan)
+4. Restart app an voi --auto-updated --minimized
+
+---
+
+## Chuc nang validate_zip_file()
+
+Sau khi tai ZIP ve, app goi validate_zip_file() de kiem tra:
+1. File ton tai va kich thuoc hop le (> 100 bytes)
+2. La file ZIP hop le (khong phai HTML warning)
+3. Khong bi loi cau truc (testzip)
+4. Ben trong co chua ATLED_BK.exe
+
+Neu bat ky dieu kien nao that bai, update se bi huy va app cu tiep tuc chay.
+
+---
+
+## Chu y quan trong
+
+1. **Update khong can xac nhan** - ca auto update va manual update deu apply ngay
+2. **App chay an** - sau update, app moi khoi dong voi --auto-updated --minimized
+3. **Ngay 1 lan** - auto update chi kiem tra 1 lan moi ngay
+4. **Hoan tat backup truoc khi update** - auto update checker chi chay khi da co STORE_NAME va WATCH_DIRECTORY

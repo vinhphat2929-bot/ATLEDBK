@@ -1,11 +1,11 @@
 """
-update_helpers.py - ZIP-based Update System (v1.1.7)
+update_helpers.py - ZIP-based Update System (v1.3.1)
 
 Update Workflow (Mẹ bồng con - trực tiếp bằng Python, KHÔNG .BAT):
-1. Download update.zip from Google Drive
-2. Validate ZIP integrity using zipfile.is_zipfile()
+1. Download update.zip from Dropbox
+2. Validate ZIP integrity using validate_zip_file() (checks structure + ATLED_BK.exe inside)
 3. Rename running ATLED_BK.exe -> ATLED_BK_OLD.exe
-4. Extract new ATLED_BK.exe directly to C:\ATLED\
+4. Extract new ATLED_BK.exe directly to C:\\ATLED\\
 5. Launch new app with CREATE_NO_WINDOW (no CMD, no .bat)
 6. Exit current app with os._exit(0)
 """
@@ -329,7 +329,11 @@ def check_for_update() -> tuple[bool, str]:
 
 def download_update_zip(url: str, zip_destination: str) -> tuple[bool, str]:
     """
-    Thay the hoan toan logic cu bang luong boc tach token dynamic qua requests.Session
+    Download update ZIP from Dropbox.
+    Flow:
+    1. Request initial URL to get confirm token (Dropbox requires this for large files)
+    2. Download with confirm token appended to URL
+    3. Validate ZIP structure and content
     """
     import requests
     import re
@@ -354,11 +358,11 @@ def download_update_zip(url: str, zip_destination: str) -> tuple[bool, str]:
 
     try:
         session = requests.Session()
-        # Buoc 1: Goi len de lay cookie va trang canh bao virus
+        # Buoc 1: Goi len de lay cookie va trang canh bao
         response = session.get(url, stream=True, timeout=30)
 
         confirm_token = None
-        # Quet token tu cookie
+        # Quet token tu cookie (Dropbox dung cookie nay cho file lon)
         for key, value in response.cookies.items():
             if key.startswith('download_warning'):
                 confirm_token = value
@@ -379,23 +383,30 @@ def download_update_zip(url: str, zip_destination: str) -> tuple[bool, str]:
             else:
                 url += f"&confirm={confirm_token}"
 
-        # Buoc 3: Gui request thuc su de tai file ZIP bieu kien
+        # Buoc 3: Gui request thuc su de tai file ZIP
         final_response = session.get(url, stream=True, timeout=60)
 
         # Kiem tra content-type, neu la HTML thi chan luon
         content_type = final_response.headers.get('Content-Type', '')
-        if 'text/html' in content_type or 'text/plain' in response.text[:200] and '<html' in response.text.lower():
-            return False, "Google Drive van tra ve trang HTML canh bao virus. Token ko hop le."
+        if 'text/html' in content_type or ('text/plain' in response.text[:200] and '<html' in response.text.lower()):
+            logger.error("Dropbox tra ve trang HTML, khong phai ZIP file")
+            return False, "Dropbox returned HTML warning page, not a ZIP file."
 
         # Tien hanh ghi file ra o cung
+        downloaded = 0
         with open(zip_destination, 'wb') as f:
-            for chunk in final_response.iter_content(chunk_size=8192):
+            for chunk in final_response.iter_content(chunk_size=65536):
                 if chunk:
                     f.write(chunk)
+                    downloaded += len(chunk)
+
+        logger.info(f"Da tai {downloaded} bytes")
 
         # Buoc 4: Validate file ZIP xem co hop le ko sau khi tai xong
-        if not zipfile.is_zipfile(zip_destination):
-            return False, "File tai ve khong phai la file ZIP hop le (Giam dinh that bai)."
+        is_valid, validate_msg = validate_zip_file(zip_destination)
+        if not is_valid:
+            logger.error(f"ZIP validation failed: {validate_msg}")
+            return False, f"ZIP validation failed: {validate_msg}"
 
         logger.info(f"Da tai va validate file ZIP thanh cong ve: {zip_destination}")
         return True, "Update ZIP ready."
@@ -410,13 +421,16 @@ def run_update_script(
     restart_background: bool = False,
 ) -> bool:
     """
-    Update workflow (v1.1.7 - "Mẹ bồng con" trực tiếp bằng Python, KHÔNG DÙNG .BAT):
+    Update workflow (v1.3.2 - App mới xóa _OLD sau 60s):
 
     1. Dọn file _OLD cũ nếu có
     2. Đổi tên ATLED_BK.exe đang chạy -> ATLED_BK_OLD.exe (Windows cho phép đổi tên file đang chạy)
     3. Giải nén trực tiếp file mới vào ATLED_BK.exe (chỗ này giờ đã trống)
     4. Bật app mới lên ngay với CREATE_NO_WINDOW (không CMD, không .bat)
-    5. App cũ tự sát văn minh bằng os._exit(0)
+    5. App mới sẽ xóa _OLD sau 60s (trong startup.py)
+
+    LƯU Ý: Hàm này KHÔNG gọi os._exit(0). App cũ sẽ quit mềm qua QApplication.quit()
+    trong main.py, PyInstaller sẽ tự cleanup _MEI. os._exit(0) chỉ là fallback.
     """
     target_dir = r"C:\ATLED"
     main_exe = os.path.join(target_dir, "ATLED_BK.exe")
@@ -475,10 +489,10 @@ def run_update_script(
 
         logging.info("[UPDATE] Khoi dong app moi voi moi truong sach, che do an (--auto-updated --minimized)...")
         clean_env = os.environ.copy()
-        # Only remove PyInstaller's own _MEIPASS variable (which points to old _MEI temp dir)
-        # Keep all other env vars including SSL_CERT_FILE so the new app's certifi still works
-        if '_MEIPASS' in clean_env:
-            clean_env.pop('_MEIPASS')
+        # Remove ALL PyInstaller-related variables to ensure fresh start
+        for key in list(clean_env.keys()):
+            if '_MEI' in key.upper() or 'PYINSTALLER' in key.upper():
+                clean_env.pop(key, None)
 
         # Ensure SSL certs are available in new process by setting certifi path explicitly
         try:
@@ -499,32 +513,19 @@ def run_update_script(
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-        logging.info("[UPDATE] App moi da khoi dong an - app cu tu tat ngay bay gio")
+        logging.info("[UPDATE] App moi da khoi dong an - app cu se quit mềm")
 
-        # Bước 6: Xóa file _OLD để không tích tụ (chờ 2 giây để app mới khởi động xong)
-        # QUAN TRỌNG: daemon=True để thread này sống sót sau os._exit(0)
-        def _cleanup_old():
-            import time
-            time.sleep(2)
-            if os.path.exists(old_exe):
-                try:
-                    os.remove(old_exe)
-                    logging.info("[UPDATE] Da xoa ATLED_BK_OLD.exe sau khi update thanh cong")
-                except Exception:
-                    pass
-
-        import threading
-        cleanup_thread = threading.Thread(target=_cleanup_old, daemon=True)
-        cleanup_thread.start()
-
-        # Bước 7: Đợi 2 giây để app mới khởi động xong trước khi app cũ tự sát
+        # Bước 6: Đợi 2 giây để app mới khởi động xong trước khi app cũ tự sát
         # Tránh tình trạng app mới bị ảnh hưởng khi app cũ gọi os._exit(0) quá nhanh
         import time
         logging.info("[UPDATE] Cho 2 giay de app moi khoi dong xong truoc khi app cu tat...")
         time.sleep(2)
 
-        # Bước 8: App cũ tự sát văn minh
-        os._exit(0)
+        # Bước 7: KHÔNG gọi os._exit(0) ở đây nữa
+        # App cũ sẽ quit mềm qua QApplication.quit() trong main.py
+        # PyInstaller sẽ tự cleanup _MEI
+        # os._exit(0) chỉ là fallback nếu QApplication quit quá chậm (xem main.py)
+        logging.info("[UPDATE] Update script done - app cu se quit mềm qua QApplication.quit()")
 
     except Exception as e:
         logging.error(f"[UPDATE] Loi luong Mẹ bồng con: {e}")
@@ -563,7 +564,6 @@ def send_post_update_notification(
     resolved_store_name = store_name or "[Unknown store]"
     resolved_watch_directory = watch_directory or "[Not configured]"
     message = (
-        "🚀 [ATLED SYSTEM UPDATE SUCCESS]\n"
         f"🖥️ Host: {os.environ.get('COMPUTERNAME')} | User: {os.environ.get('USERNAME')}\n"
         f"🏪 Merchant: {resolved_store_name}\n"
         f"📂 Watch Directory: {resolved_watch_directory}\n"
